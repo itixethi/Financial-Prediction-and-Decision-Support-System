@@ -1,0 +1,168 @@
+{% include 'abstracts/head.html' %}
+{% include 'abstracts/menu.html' %}
+
+<main class="container mt-5">
+  <h2>Interactive Finance Prediction Dashboard</h2>
+
+  <p>
+    Select an asset to view its model performance, prediction output, charts, and future analysis options.
+  </p>
+
+  <!-- Asset selector -->
+  <form method="get" action="/dashboard" class="row g-3 mb-4">
+    <div class="col-md-8">
+      <select class="form-select" name="asset">
+        {% for item in assets %}
+          <option value="{{ item.Symbol }}" {% if item.Symbol == selected_asset %}selected{% endif %}>
+            {{ item.Symbol }} - {{ item.Name }} ({{ item.Type }})
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-primary w-100">Load Asset</button>
+    </div>
+
+    <div class="col-md-2">
+      <a href="/assets/{{ selected_asset }}" class="btn btn-outline-dark w-100">Asset Info</a>
+    </div>
+  </form>
+
+  <!-- Asset information card -->
+  {% if asset %}
+    <div class="card mb-4">
+      <div class="card-body">
+        <h4>{{ asset.Symbol }} - {{ asset.Name }}</h4>
+        <p>{{ asset.Description }}</p>
+        <span class="badge bg-secondary">{{ asset.Type }}</span>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- RMSE summary cards -->
+  {% if model_result %}
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <h6>Linear Regression RMSE</h6>
+            <h4>{{ "%.6f"|format(model_result.Linear_Regression_RMSE) }}</h4>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <h6>LSTM RMSE</h6>
+            <h4>{{ "%.6f"|format(model_result.LSTM_RMSE) }}</h4>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <h6>Best Model</h6>
+            <h4>{{ model_result.Best_Model }}</h4>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <h6>LSTM Improvement</h6>
+            <h4>{{ "%.2f"|format(model_result["LSTM_Improvement_%"]) }}%</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Dashboard charts -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5>RMSE Comparison Chart</h5>
+          <p class="text-muted">
+            Compares Linear Regression and LSTM error for the selected asset.
+          </p>
+          <canvas id="rmseChart" data-asset="{{ selected_asset }}"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5>Actual vs Predicted Returns</h5>
+          <p class="text-muted">
+            Shows actual return against Linear Regression and LSTM predictions.
+          </p>
+          <canvas id="predictionChart" data-asset="{{ selected_asset }}"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Future model execution section -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5>Run New Analysis</h5>
+      <p>
+        This section represents the next stage of the system, where a selected stock or ETF
+        will be passed into the Python modelling pipeline and new prediction results will be generated.
+      </p>
+
+      <button
+      class="btn btn-success" 
+      id="runAnalysisButton" 
+      data-asset="{{ selected_asset }}"
+      >
+      Run Model Analysis
+    </button>
+    <div id="analysisMessage" class="alert alert-info mt-3" hidden></div>
+
+  <!-- Prediction table -->
+  <h4>{{ selected_asset }} Actual vs Predicted Returns Table</h4>
+
+  {% if predictions %}
+    <table class="table table-bordered table-striped mt-3">
+      <thead class="table-dark">
+        <tr>
+          <th>Date</th>
+          <th>Actual Return</th>
+          <th>Linear Regression Prediction</th>
+          <th>LSTM Prediction</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for row in predictions %}
+        <tr>
+          <td>{{ row.Date }}</td>
+          <td>{{ "%.4f"|format(row.Actual_Return) }}</td>
+          <td>{{ "%.4f"|format(row.Linear_Regression_Predicted_Return) }}</td>
+          <td>{{ "%.4f"|format(row.LSTM_Predicted_Return) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="alert alert-warning">
+      No prediction data found for {{ selected_asset }}.
+    </div>
+  {% endif %}
+
+  <!-- Navigation buttons -->
+  <div class="mt-4">
+    <a href="/model-results" class="btn btn-outline-primary">View Full Model Results</a>
+    <a href="/correlations" class="btn btn-outline-primary">View Correlations</a>
+    <a href="/predictions/{{ selected_asset }}" class="btn btn-outline-primary">Open Prediction Page</a>
+  </div>
+</main>
+
+{% include 'abstracts/footer.html' %}
