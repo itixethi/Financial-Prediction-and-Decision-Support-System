@@ -1,0 +1,83 @@
+{% include 'abstracts/head.html' %}
+{% include 'abstracts/menu.html' %}
+
+<main class="container mt-5">
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white py-2">
+      <h2 class="mb-0">{{ asset }} Prediction Results</h2>
+    </div>
+
+    <div class="card-body">
+      <p class="mb-0">
+        This page shows detailed actual and predicted return values for the selected asset.
+        If model analysis has been run from the dashboard, this page displays the generated
+        prediction output saved by the system.
+      </p>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-success text-white py-2">
+      <h4 class="mb-0">Prediction Chart</h4>
+    </div>
+
+    <div class="card-body">
+      <canvas id="predictionChart" data-asset="{{ asset }}"></canvas>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-success text-white py-2">
+      <h4 class="mb-0">Prediction Data Preview</h4>
+    </div>
+
+    <div class="card-body">
+        <p class="text-muted">
+            Showing the latest 5 prediction rows from {{ prediction_count }} total test-period rows.
+        </p>
+      {% if predictions %}
+        <table class="table table-bordered table-striped">
+          <thead class="table-success">
+            <tr>
+              <th>Run Time</th>
+              <th>Source</th>
+              <th>Date</th>
+              <th>Actual Return</th>
+              <th>Linear Regression Prediction</th>
+              <th>LSTM Prediction</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for row in predictions %}
+            <tr>
+              <td>{{ row.Run_Time if row.Run_Time is defined else "Original Result" }}</td>
+              <td>{{ row.Source if row.Source is defined else "static_csv" }}</td>
+              <td>{{ row.Date }}</td>
+              <td>{{ "%.4f"|format(row.Actual_Return) }}</td>
+              <td>{{ "%.4f"|format(row.Linear_Regression_Predicted_Return) }}</td>
+              <td>{{ "%.4f"|format(row.LSTM_Predicted_Return) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="alert alert-warning mb-0">
+          No prediction data found for {{ asset }}. Run analysis from the dashboard first.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-5">
+    <div class="card-body">
+      <a href="/dashboard?asset={{ asset }}" class="btn btn-outline-primary">Back to Dashboard</a>
+      <a href="/model-results" class="btn btn-outline-primary">Model Results</a>
+      <a href="/compare-assets" class="btn btn-outline-primary">Compare Assets</a>
+    </div>
+  </div>
+
+</main>
+
+{% include 'abstracts/footer.html' %}

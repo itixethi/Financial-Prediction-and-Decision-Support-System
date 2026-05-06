@@ -1,0 +1,100 @@
+{% include 'abstracts/head.html' %}
+{% include 'abstracts/menu.html' %}
+
+<main class="container mt-5">
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white py-2">
+      <h2 class="mb-0">Live Market Data: {{ symbol }}</h2>
+    </div>
+
+    <div class="card-body">
+      <p class="mb-0">
+        This page displays recent market data for the selected asset. In the full dissertation system,
+        this data layer can support live prediction, comparison, and news-based market analysis.
+      </p>
+    </div>
+  </div>
+
+  {% if market_data.error %}
+    <div class="alert alert-danger">
+      {{ market_data.error }}
+    </div>
+  {% else %}
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <h6>Latest Close</h6>
+            <h3>${{ market_data.latest_close }}</h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <h6>Latest Volume</h6>
+            <h3>{{ market_data.latest_volume }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-success text-white py-2">
+        <h4 class="mb-0">Recent Price Chart</h4>
+      </div>
+
+      <div class="card-body">
+        <canvas id="liveMarketChart" data-symbol="{{ symbol }}"></canvas>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-success text-white py-2">
+        <h4 class="mb-0">Recent Market Data</h4>
+      </div>
+
+      <div class="card-body">
+        <table class="table table-bordered table-striped">
+          <thead class="table-success">
+            <tr>
+              <th>Date</th>
+              <th>Open</th>
+              <th>High</th>
+              <th>Low</th>
+              <th>Close</th>
+              <th>Volume</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for row in market_data.price_data %}
+            <tr>
+              <td>{{ row.date }}</td>
+              <td>${{ row.open }}</td>
+              <td>${{ row.high }}</td>
+              <td>${{ row.low }}</td>
+              <td>${{ row.close }}</td>
+              <td>{{ row.volume }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  {% endif %}
+
+  <div class="card shadow-sm mb-5">
+    <div class="card-body">
+      <a href="/dashboard?asset={{ symbol }}" class="btn btn-outline-primary">Back to Dashboard</a>
+      <a href="/compare-assets" class="btn btn-outline-primary">Compare Assets</a>
+    </div>
+  </div>
+
+</main>
+
+{% include 'abstracts/footer.html' %}
