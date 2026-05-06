@@ -1,0 +1,104 @@
+{% include 'abstracts/head.html' %}
+{% include 'abstracts/menu.html' %}
+
+<main class="container mt-5">
+  <h2>Model Results and Performance Comparison</h2>
+
+  <p>
+    This page presents the saved RMSE comparison between the Linear Regression baseline
+    model and the LSTM model. If new analysis runs have been generated from the dashboard,
+    the latest generated results are shown here.
+  </p>
+
+  <!-- Summary cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <h6>Total Result Rows</h6>
+          <h4>{{ model_results|length }}</h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <h6>Models Compared</h6>
+          <h4>2</h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <h6>Main Metric</h6>
+          <h4>RMSE</h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <h6>Evaluation Type</h6>
+          <h4>Returns</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart section -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5>Linear Regression vs LSTM RMSE</h5>
+      <p class="text-muted">
+        This chart compares both model errors across the displayed result rows.
+      </p>
+      <canvas id="allModelResultsChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Results table -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5>Saved Model Comparison Table</h5>
+
+      <table class="table table-bordered table-striped mt-3">
+        <thead class="table-dark">
+          <tr>
+            <th>Run Time</th>
+            <th>Asset</th>
+            <th>Source</th>
+            <th>Linear Regression RMSE</th>
+            <th>LSTM RMSE</th>
+            <th>Best Model</th>
+            <th>LSTM Improvement %</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for result in model_results %}
+          <tr>
+            <td>{{ result.Run_Time if result.Run_Time is defined else "Original Result" }}</td>
+            <td><strong>{{ result.Asset }}</strong></td>
+            <td>{{ result.Source if result.Source is defined else "static_csv" }}</td>
+            <td>{{ "%.6f"|format(result.Linear_Regression_RMSE) }}</td>
+            <td>{{ "%.6f"|format(result.LSTM_RMSE) }}</td>
+            <td>{{ result.Best_Model }}</td>
+            <td>{{ "%.2f"|format(result["LSTM_Improvement_%"]) }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a href="/dashboard" class="btn btn-outline-primary">Back to Dashboard</a>
+    <a href="/correlations" class="btn btn-outline-primary">View Correlations</a>
+  </div>
+</main>
+
+{% include 'abstracts/footer.html' %}
