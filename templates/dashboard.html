@@ -8,28 +8,40 @@
     Select an asset to view its model performance, prediction output, charts, and future analysis options.
   </p>
 
-  <!-- Asset selector -->
-  <form method="get" action="/dashboard" class="row g-3 mb-4">
-    <div class="col-md-8">
-      <select class="form-select" name="asset">
-        {% for item in assets %}
-          <option value="{{ item.Symbol }}" {% if item.Symbol == selected_asset %}selected{% endif %}>
+  <form method="get" action="/dashboard" class="row g-3 mb-4" id="dashboardAssetForm">
+    <div class="col-md-9">
+      <label class="form-label">Search stock or ETF symbol</label>
+      <input
+        type="text"
+        class="form-control"
+        name="asset"
+        list="assetOptions"
+        placeholder="Type symbol e.g. AAPL, GOOGL, TSLA"
+        value="{{ selected_asset }}"
+      />
+
+      <datalist id="assetOptions">
+        {% for item in metadata_assets %}
+          <option value="{{ item.Symbol }}">
             {{ item.Symbol }} - {{ item.Name }} ({{ item.Type }})
           </option>
         {% endfor %}
-      </select>
+      </datalist>
     </div>
 
-    <div class="col-md-2">
-      <button type="submit" class="btn btn-primary w-100">Load Asset</button>
+    <input type="hidden" name="test_mode" id="hiddenTestMode" value="{{ test_mode }}">
+    <input type="hidden" name="evaluation_start" id="hiddenEvaluationStart" value="{{ evaluation_start }}">
+    <input type="hidden" name="evaluation_end" id="hiddenEvaluationEnd" value="{{ evaluation_end }}">
+    
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Load Asset</button>
     </div>
 
-    <div class="col-md-2">
-      <a href="/assets/{{ selected_asset }}" class="btn btn-outline-dark w-100">Asset Info</a>
+    <div class="col-md-1 d-flex align-items-end">
+      <a href="/assets/{{ selected_asset }}" class="btn btn-outline-dark w-100">Info</a>
     </div>
   </form>
 
-  <!-- Asset information card -->
   {% if asset %}
     <div class="card mb-4">
       <div class="card-body">
@@ -38,50 +50,75 @@
         <span class="badge bg-secondary">{{ asset.Type }}</span>
       </div>
     </div>
-  {% endif %}
-
-  <!-- RMSE summary cards -->
-  {% if model_result %}
-    <div class="row g-3 mb-4">
-      <div class="col-md-3">
-        <div class="card text-center h-100">
-          <div class="card-body">
-            <h6>Linear Regression RMSE</h6>
-            <h4>{{ "%.6f"|format(model_result.Linear_Regression_RMSE) }}</h4>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="card text-center h-100">
-          <div class="card-body">
-            <h6>LSTM RMSE</h6>
-            <h4>{{ "%.6f"|format(model_result.LSTM_RMSE) }}</h4>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="card text-center h-100">
-          <div class="card-body">
-            <h6>Best Model</h6>
-            <h4>{{ model_result.Best_Model }}</h4>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="card text-center h-100">
-          <div class="card-body">
-            <h6>LSTM Improvement</h6>
-            <h4>{{ "%.2f"|format(model_result["LSTM_Improvement_%"]) }}%</h4>
-          </div>
-        </div>
-      </div>
+  {% else %}
+    <div class="alert alert-warning">
+      {{ selected_asset }} is selected, but no asset profile was found yet.
+      You can still run analysis if its historical CSV exists.
     </div>
   {% endif %}
 
-  <!-- Dashboard charts -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <h6>Linear Regression RMSE</h6>
+          <h4 id="linearRmseCard">
+            {% if model_result %}
+              {{ "%.6f"|format(model_result.Linear_Regression_RMSE) }}
+            {% else %}
+              Pending
+            {% endif %}
+          </h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <h6>LSTM RMSE</h6>
+          <h4 id="lstmRmseCard">
+            {% if model_result %}
+              {{ "%.6f"|format(model_result.LSTM_RMSE) }}
+            {% else %}
+              Pending
+            {% endif %}
+          </h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <h6>Best Model</h6>
+          <h4 id="bestModelCard">
+            {% if model_result %}
+              {{ model_result.Best_Model }}
+            {% else %}
+              Pending
+            {% endif %}
+          </h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <h6>LSTM Improvement</h6>
+          <h4 id="lstmImprovementCard">
+            {% if model_result %}
+              {{ "%.2f"|format(model_result["LSTM_Improvement_%"]) }}%
+            {% else %}
+              Pending
+            {% endif %}
+          </h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row g-3 mb-4">
     <div class="col-md-6">
       <div class="card h-100">
@@ -108,60 +145,70 @@
     </div>
   </div>
 
-  <!-- Future model execution section -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <h5>Run New Analysis</h5>
-      <p>
-        This section represents the next stage of the system, where a selected stock or ETF
-        will be passed into the Python modelling pipeline and new prediction results will be generated.
-      </p>
+  <section class="my-5">
+    <div class="border-top pt-4">
+      <h4 class="mb-3">Run New Model Analysis</h4>
 
-      <button
-      class="btn btn-success" 
-      id="runAnalysisButton" 
-      data-asset="{{ selected_asset }}"
-      >
-      Run Model Analysis
-    </button>
-    <div id="analysisMessage" class="alert alert-info mt-3" hidden></div>
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <p>
+            Select a test period and run the research-mode pipeline for the selected stock or ETF.
+            The system will train Linear Regression and LSTM, then save the generated results.
+          </p>
 
-  <!-- Prediction table -->
-  <h4>{{ selected_asset }} Actual vs Predicted Returns Table</h4>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Test Period Mode</label>
+              <select class="form-select" id="testModeSelect" name="test_mode">
+                <option value="original" {% if test_mode == "original" %}selected{% endif %}>Original Dissertation Window</option>
+                <option value="last_160" {% if test_mode == "last_160" %}selected{% endif %}>Next 160 Trading Days from Start Date</option>
+                <option value="last_365" {% if test_mode == "last_365" %}selected{% endif %}>Next 365 Trading Days from Start Date</option>
+                <option value="custom" {% if test_mode == "custom" %}selected{% endif %}>Custom Date Range</option>
+            </select>
+            </div>
 
-  {% if predictions %}
-    <table class="table table-bordered table-striped mt-3">
-      <thead class="table-dark">
-        <tr>
-          <th>Date</th>
-          <th>Actual Return</th>
-          <th>Linear Regression Prediction</th>
-          <th>LSTM Prediction</th>
-        </tr>
-      </thead>
+            <div class="col-md-4">
+              <label class="form-label">Evaluation Start</label>
+              <input
+                type="date"
+                class="form-control"
+                id="evaluationStartInput"
+                name="evaluation_start"
+                value="{{ evaluation_start }}"
+              />
+            </div>
 
-      <tbody>
-        {% for row in predictions %}
-        <tr>
-          <td>{{ row.Date }}</td>
-          <td>{{ "%.4f"|format(row.Actual_Return) }}</td>
-          <td>{{ "%.4f"|format(row.Linear_Regression_Predicted_Return) }}</td>
-          <td>{{ "%.4f"|format(row.LSTM_Predicted_Return) }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <div class="alert alert-warning">
-      No prediction data found for {{ selected_asset }}.
+            <div class="col-md-4">
+              <label class="form-label">Evaluation End</label>
+              <input
+                type="date"
+                class="form-control"
+                id="evaluationEndInput"
+                name="evaluation_end"
+                value="{{ evaluation_end }}"
+              />
+            </div>
+          </div>
+
+          <button
+            class="btn btn-success"
+            id="runAnalysisButton"
+            data-asset="{{ selected_asset }}"
+          >
+            Run Model Analysis for {{ selected_asset }}
+          </button>
+
+          <div id="analysisMessage" class="alert alert-info mt-3" hidden></div>
+        </div>
+      </div>
     </div>
-  {% endif %}
+  </section>
 
-  <!-- Navigation buttons -->
-  <div class="mt-4">
+  <div class="mt-4 mb-5">
     <a href="/model-results" class="btn btn-outline-primary">View Full Model Results</a>
     <a href="/correlations" class="btn btn-outline-primary">View Correlations</a>
-    <a href="/predictions/{{ selected_asset }}" class="btn btn-outline-primary">Open Prediction Page</a>
+    <a href="/predictions/{{ selected_asset }}" class="btn btn-outline-primary" id="predictionPageLink">Open Prediction Page</a>
+    <a href="/live-market/{{ selected_asset }}" class="btn btn-outline-success">Live Market Data</a>
   </div>
 </main>
 
