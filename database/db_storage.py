@@ -9,30 +9,22 @@ from database.models import Asset, HistoricalPrice, ExperimentRun, ModelResult, 
 PRIMARY_RESEARCH_ASSETS = {"AAPL", "AMZN", "MSFT", "SPY", "QQQ"}
 
 
-# Determine whether an asset is a stock or ETF
 def get_asset_type(symbol: str) -> str:
-
     stock_path = f"data/historical/stocks/{symbol}.csv"
     etf_path = f"data/historical/etfs/{symbol}.csv"
 
-    # ETF file exists
     if os.path.exists(etf_path):
         return "ETF"
 
-    # Stock file exists
     if os.path.exists(stock_path):
         return "Stock"
 
-    # Asset not found
     return "Unknown"
 
 
-# Retrieve metadata for an asset
 def get_asset_metadata(symbol: str):
-
     metadata_path = "data/raw/symbols_valid_meta.csv"
 
-    # Fallback metadata if CSV does not exist
     if not os.path.exists(metadata_path):
         return {
             "name": symbol,
@@ -43,10 +35,8 @@ def get_asset_metadata(symbol: str):
     metadata_df = pd.read_csv(metadata_path)
     metadata_df["Symbol"] = metadata_df["Symbol"].astype(str)
 
-    # Find matching symbol
     row = metadata_df[metadata_df["Symbol"].str.upper() == symbol.upper()]
 
-    # Fallback metadata if symbol not found
     if row.empty:
         return {
             "name": symbol,
@@ -56,7 +46,6 @@ def get_asset_metadata(symbol: str):
 
     item = row.iloc[0]
 
-    # Return cleaned metadata
     return {
         "name": item["Security Name"],
         "asset_type": "ETF" if str(item["ETF"]).upper() == "Y" else "Stock",
@@ -64,23 +53,18 @@ def get_asset_metadata(symbol: str):
     }
 
 
-# Insert or update asset information in PostgreSQL
 def upsert_asset(db, symbol: str):
-
     symbol = symbol.upper()
     metadata = get_asset_metadata(symbol)
 
-    # Check if asset already exists
     asset = db.query(Asset).filter(Asset.symbol == symbol).first()
 
-    # Assign research grouping
     research_group = (
         "primary_dissertation_asset"
         if symbol in PRIMARY_RESEARCH_ASSETS
         else "extended_historical"
     )
 
-    # Update existing asset
     if asset:
         asset.name = metadata["name"]
         asset.asset_type = metadata["asset_type"]
@@ -88,7 +72,6 @@ def upsert_asset(db, symbol: str):
         asset.research_group = research_group
         return asset
 
-    # Create new asset record
     asset = Asset(
         symbol=symbol,
         name=metadata["name"],
@@ -104,47 +87,35 @@ def upsert_asset(db, symbol: str):
     return asset
 
 
-# Import historical CSV price data into PostgreSQL
 def import_historical_prices_to_postgres(limit_assets=None):
-
     db = SessionLocal()
 
     try:
         asset_files = []
 
-        # Scan stock and ETF folders
         for folder, asset_type in [
             ("data/historical/stocks", "Stock"),
             ("data/historical/etfs", "ETF")
         ]:
-
             if not os.path.exists(folder):
                 continue
 
             for filename in os.listdir(folder):
-
                 if filename.endswith(".csv"):
                     symbol = filename.replace(".csv", "").upper()
+                    asset_files.append((symbol, os.path.join(folder, filename), asset_type))
 
-                    asset_files.append(
-                        (symbol, os.path.join(folder, filename), asset_type)
-                    )
-
-        # Optional import limit
         if limit_assets:
             asset_files = asset_files[:limit_assets]
 
         imported_assets = 0
         imported_prices = 0
 
-        # Import each asset file
         for symbol, file_path, asset_type in asset_files:
-
             print(f"Importing {symbol}...")
 
             upsert_asset(db, symbol)
 
-            # Skip already imported assets
             existing_count = (
                 db.query(HistoricalPrice)
                 .filter(HistoricalPrice.asset_symbol == symbol)
@@ -159,21 +130,17 @@ def import_historical_prices_to_postgres(limit_assets=None):
 
             required_columns = ["Date", "Close", "Adj Close", "Volume"]
 
-            # Validate required columns
             if not set(required_columns).issubset(df.columns):
                 print(f"Skipping {symbol}, missing required columns.")
                 continue
 
-            # Clean dataset
             df = df[required_columns].copy()
             df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
             df = df.dropna(subset=["Date", "Close"])
 
             price_objects = []
 
-            # Convert rows into SQLAlchemy objects
             for _, row in df.iterrows():
-
                 price_objects.append(
                     HistoricalPrice(
                         asset_symbol=symbol,
@@ -184,7 +151,6 @@ def import_historical_prices_to_postgres(limit_assets=None):
                     )
                 )
 
-            # Bulk insert price data
             db.bulk_save_objects(price_objects)
             db.commit()
 
@@ -199,9 +165,7 @@ def import_historical_prices_to_postgres(limit_assets=None):
         db.close()
 
 
-# Save completed analysis results into PostgreSQL
 def save_analysis_result_to_postgres(result: dict):
-
     db = SessionLocal()
 
     try:
@@ -209,7 +173,6 @@ def save_analysis_result_to_postgres(result: dict):
 
         upsert_asset(db, symbol)
 
-        # Create experiment run record
         experiment_run = ExperimentRun(
             asset_symbol=symbol,
             source=result["source"],
@@ -223,7 +186,6 @@ def save_analysis_result_to_postgres(result: dict):
         db.add(experiment_run)
         db.flush()
 
-        # Save model evaluation metrics
         model_result = ModelResult(
             experiment_run_id=experiment_run.id,
             asset_symbol=symbol,
@@ -240,9 +202,7 @@ def save_analysis_result_to_postgres(result: dict):
 
         prediction_objects = []
 
-        # Save prediction rows
         for index, linear_row in enumerate(linear_predictions):
-
             lstm_row = lstm_predictions[index]
 
             prediction_objects.append(
@@ -268,10 +228,7 @@ def save_analysis_result_to_postgres(result: dict):
     finally:
         db.close()
 
-
-# Retrieve latest saved model results
 def get_model_results_from_postgres():
-
     db = SessionLocal()
 
     try:
@@ -286,7 +243,6 @@ def get_model_results_from_postgres():
         seen_keys = set()
 
         for model_result, run in rows:
-
             unique_key = (
                 model_result.asset_symbol,
                 run.source,
@@ -295,10 +251,9 @@ def get_model_results_from_postgres():
                 str(run.evaluation_end)
             )
 
-            # Keep only newest result for identical setup
+            # Keep only the newest run for this exact asset/source/period setup
             if unique_key in seen_keys:
                 continue
-
             seen_keys.add(unique_key)
 
             results.append({
@@ -316,9 +271,158 @@ def get_model_results_from_postgres():
                 "LSTM_Improvement_%": model_result.lstm_improvement_percent
             })
 
-            # Limit returned rows
             if len(results) >= 15:
                 break
+
+        return results
+
+    finally:
+        db.close()
+
+
+def get_predictions_from_postgres_by_asset(asset_symbol):
+    db = SessionLocal()
+
+    try:
+        asset_symbol = asset_symbol.upper()
+
+        latest_run = (
+            db.query(ExperimentRun)
+            .filter(ExperimentRun.asset_symbol == asset_symbol)
+            .order_by(ExperimentRun.created_at.desc())
+            .first()
+        )
+
+        if latest_run is None:
+            return []
+
+        rows = (
+            db.query(Prediction)
+            .filter(Prediction.experiment_run_id == latest_run.id)
+            .order_by(Prediction.date.asc())
+            .all()
+        )
+
+        predictions = []
+
+        for row in rows:
+            predictions.append({
+                "Run_Time": latest_run.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "Asset": row.asset_symbol,
+                "Source": latest_run.source,
+                "Date": str(row.date),
+                "Actual_Return": row.actual_return,
+                "Linear_Regression_Predicted_Return": row.linear_regression_prediction,
+                "LSTM_Predicted_Return": row.lstm_prediction
+            })
+
+        return predictions
+
+    finally:
+        db.close()
+
+def save_live_market_data_to_postgres(symbol: str, live_df):
+    db = SessionLocal()
+
+    try:
+        symbol = symbol.upper().strip()
+
+        upsert_asset(db, symbol)
+
+        imported_rows = 0
+
+        for _, row in live_df.iterrows():
+            price_date = pd.to_datetime(row["Date"]).date()
+
+            existing = (
+                db.query(LiveMarketPrice)
+                .filter(
+                    LiveMarketPrice.asset_symbol == symbol,
+                    LiveMarketPrice.date == price_date
+                )
+                .first()
+            )
+
+            if existing:
+                existing.close = float(row["Close"])
+                existing.volume = float(row["Volume"]) if pd.notnull(row["Volume"]) else None
+                existing.source = "yfinance"
+            else:
+                db.add(
+                    LiveMarketPrice(
+                        asset_symbol=symbol,
+                        date=price_date,
+                        close=float(row["Close"]),
+                        volume=float(row["Volume"]) if pd.notnull(row["Volume"]) else None,
+                        source="yfinance"
+                    )
+                )
+
+            imported_rows += 1
+
+        db.commit()
+        return imported_rows
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
+
+def get_live_market_data_from_postgres(symbol: str):
+    db = SessionLocal()
+
+    try:
+        symbol = symbol.upper().strip()
+
+        rows = (
+            db.query(LiveMarketPrice)
+            .filter(LiveMarketPrice.asset_symbol == symbol)
+            .order_by(LiveMarketPrice.date.asc())
+            .all()
+        )
+
+        return [
+            {
+                "date": str(row.date),
+                "close": row.close,
+                "volume": row.volume,
+                "source": row.source
+            }
+            for row in rows
+        ]
+
+    finally:
+        db.close()
+
+def get_recent_model_results_for_correlation(limit=200):
+    db = SessionLocal()
+
+    try:
+        rows = (
+            db.query(ModelResult, ExperimentRun)
+            .join(ExperimentRun, ModelResult.experiment_run_id == ExperimentRun.id)
+            .order_by(ExperimentRun.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+
+        results = []
+
+        for model_result, run in rows:
+            results.append({
+                "Run_Time": run.created_at,
+                "Asset": model_result.asset_symbol,
+                "Source": run.source,
+                "Test_Mode": run.test_mode,
+                "Evaluation_Start": str(run.evaluation_start),
+                "Evaluation_End": str(run.evaluation_end),
+                "Linear_Regression_RMSE": model_result.linear_regression_rmse,
+                "LSTM_RMSE": model_result.lstm_rmse,
+                "Best_Model": model_result.best_model,
+                "LSTM_Improvement_%": model_result.lstm_improvement_percent
+            })
 
         return results
 

@@ -21,18 +21,6 @@ class Asset(Base):
 
     experiment_runs = relationship("ExperimentRun", back_populates="asset")
 
-
-class HistoricalPrice(Base):
-    __tablename__ = "historical_prices"
-
-    id = Column(Integer, primary_key=True, index=True)
-    asset_symbol = Column(String, index=True, nullable=False)
-    date = Column(Date, index=True, nullable=False)
-    close = Column(Float, nullable=False)
-    adj_close = Column(Float, nullable=True)
-    volume = Column(Float, nullable=True)
-
-
 # Stores historical asset price data imported from CSV datasets
 class HistoricalPrice(Base):
 

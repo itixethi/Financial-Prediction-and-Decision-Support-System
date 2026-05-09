@@ -12,7 +12,9 @@
     <thead class="table-dark">
       <tr>
         <th>Asset</th>
-        <th>Linear Regression RMSE</th>
+        <th>Source</th>
+        <th>Analysed Period</th>
+        <th>LR RMSE</th>
         <th>LSTM RMSE</th>
         <th>Best Model</th>
       </tr>
@@ -22,6 +24,8 @@
       {% for result in model_results %}
       <tr>
         <td>{{ result.Asset }}</td>
+        <td>{{ result.Source }}</td>
+        <td>{{ result.Evaluation_Start }} to {{ result.Evaluation_End }}</td>
         <td>{{ "%.6f"|format(result.Linear_Regression_RMSE) }}</td>
         <td>{{ "%.6f"|format(result.LSTM_RMSE) }}</td>
         <td>{{ result.Best_Model }}</td>
