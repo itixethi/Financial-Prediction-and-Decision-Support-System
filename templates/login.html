@@ -1,0 +1,36 @@
+{% include 'abstracts/head.html' %}
+
+<div class="w-full center-content">
+  <div class="login-card card">
+    <div class="card-body">
+      <h5 class="card-title mb-4">Login or Sign Up</h5>
+
+      <div id="login-box">
+        <div class="mb-3">
+          <label for="email" class="form-label">Email address</label>
+          <input type="email" class="form-control" id="email" placeholder="Enter email">
+        </div>
+
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="password" placeholder="Password">
+        </div>
+
+        <div class="d-grid gap-2">
+          <button id="sign-up" class="btn btn-secondary">Sign Up</button>
+          <button id="login" class="btn btn-primary">Login</button>
+        </div>
+      </div>
+
+      <div class="d-grid mt-3">
+        <button id="sign-out" class="btn btn-danger" hidden>Sign Out</button>
+      </div>
+
+      <div class="mt-3 text-center">
+        <a href="/">Back to Home</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% include 'abstracts/footer.html' %}

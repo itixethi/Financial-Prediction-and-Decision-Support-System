@@ -1,0 +1,397 @@
+{% include 'abstracts/head.html' %}
+{% include 'abstracts/menu.html' %}
+
+<main class="container mt-5">
+
+  <!-- Page title -->
+  <!-- Compare form -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white py-2">
+      <h4 class="mb-0">Compare Assets </h4>
+    </div>
+
+    <div class="card-body">
+      <form method="get" action="/compare-assets" id="compareAssetsForm">
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label">First Asset</label>
+            <input
+              type="text"
+              class="form-control"
+              name="asset1"
+              id="compareAssetOneInput"
+              placeholder="Example: AAPL, GOOGL, TSLA"
+              value="{{ asset1_symbol }}"
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Second Asset</label>
+            <input
+              type="text"
+              class="form-control"
+              name="asset2"
+              id="compareAssetTwoInput"
+              placeholder="Example: SPY, QQQ, NFLX"
+              value="{{ asset2_symbol }}"
+            />
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label">Data Source</label>
+            <select class="form-select" name="source" id="compareSourceSelect">
+                <option value="kaggle" {% if source == "kaggle" %}selected{% endif %}>
+                    Historical Kaggle Dataset
+                </option>
+                <option value="live" {% if source == "live" %}selected{% endif %}>
+                    Recent 5-Year Live Data
+                </option>
+            </select>
+        </div>
+
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label">Test Mode</label>
+            <select class="form-select" name="test_mode" id="compareTestModeSelect">
+              <option value="original" {% if test_mode == "original" %}selected{% endif %}>
+                Original Dissertation Window
+              </option>
+              <option value="last_160" {% if test_mode == "last_160" %}selected{% endif %}>
+                Next 160 Trading Days
+              </option>
+              <option value="last_365" {% if test_mode == "last_365" %}selected{% endif %}>
+                Next 365 Trading Days
+              </option>
+              <option value="custom" {% if test_mode == "custom" %}selected{% endif %}>
+                Custom Date Range
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Evaluation Start</label>
+            <input
+              type="date"
+              class="form-control"
+              name="evaluation_start"
+              id="compareEvaluationStartInput"
+              value="{{ evaluation_start }}"
+            />
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Evaluation End</label>
+            <input
+              type="date"
+              class="form-control"
+              name="evaluation_end"
+              id="compareEvaluationEndInput"
+              value="{{ evaluation_end }}"
+            />
+          </div>
+
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+              Compare
+            </button>
+          </div>
+        </div>
+
+        <p class="text-muted mt-3 mb-0">
+          This page compares only matching saved runs: same source, same test mode,
+          same start date, and same end date.
+        </p>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Asset info -->
+  {% if asset1 and asset2 %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-dark text-white py-2">
+        <h4 class="mb-0">Selected Asset Information</h4>
+      </div>
+
+      <div class="card-body">
+        <div class="row g-3 align-items-stretch">
+
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-body d-flex flex-column">
+                <h4>{{ asset1.Symbol }} - {{ asset1.Name }}</h4>
+                <span class="badge bg-secondary mb-3" style="width: fit-content;">{{ asset1.Type }}</span>
+                <p class="flex-grow-1">{{ asset1.Description }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-body d-flex flex-column">
+                <h4>{{ asset2.Symbol }} - {{ asset2.Name }}</h4>
+                <span class="badge bg-secondary mb-3" style="width: fit-content;">{{ asset2.Type }}</span>
+                <p class="flex-grow-1">{{ asset2.Description }}</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Missing comparison warning -->
+  {% if missing_messages %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-warning text-dark py-2">
+        <h4 class="mb-0">Comparison Not Ready</h4>
+      </div>
+
+      <div class="card-body">
+        {% for message in missing_messages %}
+          <div class="alert alert-warning">
+            {{ message }}
+          </div>
+        {% endfor %}
+
+        <p class="mb-0">
+          Run model analysis from the dashboard for both assets using the same test mode
+          and evaluation dates, then return to this page.
+        </p>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if comparison_ready %}
+
+    <!-- Comparison period summary -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <h6>Test Mode</h6>
+            <h5>{{ test_mode }}</h5>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <h6>Evaluation Start</h6>
+            <h5>{{ evaluation_start }}</h5>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <h6>Evaluation End</h6>
+            <h5>{{ evaluation_end }}</h5>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <h6>Source</h6>
+            <h5>{{ source }}</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts section -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-success text-white py-2">
+        <h4 class="mb-0">Asset Comparison Charts</h4>
+      </div>
+
+      <div class="card-body">
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5>RMSE Comparison</h5>
+                <canvas
+                  id="compareAssetsRmseChart"
+                  data-asset-one="{{ asset1_symbol }}"
+                  data-asset-two="{{ asset2_symbol }}"
+                ></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5>Average Predicted Return</h5>
+                <canvas
+                  id="compareAssetsPredictionChart"
+                  data-asset-one="{{ asset1_symbol }}"
+                  data-asset-two="{{ asset2_symbol }}"
+                ></canvas>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Decision logic -->
+    {% if asset1_summary and asset2_summary %}
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white py-2">
+          <h4 class="mb-0">Decision Support Ranking</h4>
+        </div>
+
+        <div class="card-body">
+          <div class="row g-3">
+
+            <div class="col-md-6">
+              <div class="card h-100 border-{{ asset1_summary.signal_class }}">
+                <div class="card-body">
+                  <h4>{{ asset1_symbol }}</h4>
+
+                  <span class="badge bg-{{ asset1_summary.signal_class }} mb-3">
+                    {{ asset1_summary.signal }}
+                  </span>
+
+                  <ul class="list-group">
+                    <li class="list-group-item">
+                      Average Predicted Return:
+                      {{ "%.4f"|format(asset1_summary.average_prediction) }}
+                    </li>
+
+                    <li class="list-group-item">
+                      Best Predicted Return:
+                      {{ "%.4f"|format(asset1_summary.best_prediction) }}
+                    </li>
+
+                    <li class="list-group-item">
+                      Worst Predicted Return:
+                      {{ "%.4f"|format(asset1_summary.worst_prediction) }}
+                    </li>
+
+                    <li class="list-group-item">
+                      Positive Prediction Days:
+                      {{ asset1_summary.positive_days }}
+                    </li>
+
+                    <li class="list-group-item">
+                      Negative Prediction Days:
+                      {{ asset1_summary.negative_days }}
+                    </li>
+
+                    <li class="list-group-item">
+                      Ranking Score:
+                      {{ "%.4f"|format(asset1_summary.score) }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="card h-100 border-{{ asset2_summary.signal_class }}">
+                <div class="card-body">
+                  <h4>{{ asset2_symbol }}</h4>
+
+                  <span class="badge bg-{{ asset2_summary.signal_class }} mb-3">
+                    {{ asset2_summary.signal }}
+                  </span>
+
+                  <ul class="list-group">
+                    <li class="list-group-item">
+                      Average Predicted Return:
+                      {{ "%.4f"|format(asset2_summary.average_prediction) }}
+                    </li>
+
+                    <li class="list-group-item">
+                      Best Predicted Return:
+                      {{ "%.4f"|format(asset2_summary.best_prediction) }}
+                    </li>
+
+                    <li class="list-group-item">
+                      Worst Predicted Return:
+                      {{ "%.4f"|format(asset2_summary.worst_prediction) }}
+                    </li>
+
+                    <li class="list-group-item">
+                      Positive Prediction Days:
+                      {{ asset2_summary.positive_days }}
+                    </li>
+
+                    <li class="list-group-item">
+                      Negative Prediction Days:
+                      {{ asset2_summary.negative_days }}
+                    </li>
+
+                    <li class="list-group-item">
+                      Ranking Score:
+                      {{ "%.4f"|format(asset2_summary.score) }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {% if ranking_message %}
+            <div class="alert alert-info mt-4 mb-0">
+              <strong>Ranking Result:</strong> {{ ranking_message }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+  {% endif %}
+
+  <!-- Decision note -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-success text-white py-2">
+      <h4 class="mb-0">Decision Support Note</h4>
+    </div>
+
+    <div class="card-body">
+      <div class="alert alert-secondary mb-0">
+        <strong>Note:</strong> This system compares predictive behaviour between assets.
+        Future versions will include real-time data, news integration, and live model execution.
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="card shadow-sm mb-5">
+    <div class="card-body">
+      <a
+        href="/dashboard?asset={{ asset1_symbol }}&test_mode={{ test_mode }}&evaluation_start={{ evaluation_start }}&evaluation_end={{ evaluation_end }}"
+        class="btn btn-outline-primary"
+      >
+        Open {{ asset1_symbol }} Dashboard
+      </a>
+
+      <a
+        href="/dashboard?asset={{ asset2_symbol }}&test_mode={{ test_mode }}&evaluation_start={{ evaluation_start }}&evaluation_end={{ evaluation_end }}"
+        class="btn btn-outline-primary"
+      >
+        Open {{ asset2_symbol }} Dashboard
+      </a>
+
+      <a href="/model-results" class="btn btn-outline-primary">Model Results</a>
+      <a href="/correlations" class="btn btn-outline-primary">Correlations</a>
+    </div>
+  </div>
+
+</main>
+
+{% include 'abstracts/footer.html' %}

@@ -1,0 +1,30 @@
+{% include 'abstracts/head.html' %}
+{% include 'abstracts/menu.html' %}
+
+<main class="container mt-5">
+  <h2>Analysed Asset Correlation Heatmap</h2>
+
+  <p class="text-muted">
+    Correlation matrix of daily returns for the most recent similar analysed period.
+  </p>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white">
+      <h4 class="mb-0">Correlation Heatmap (-1.0 to 1.0)</h4>
+    </div>
+
+    <div class="card-body">
+      <div id="correlationHeatmap" style="height: 600px;"></div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <a href="/dashboard" class="btn btn-outline-primary">Back to Dashboard</a>
+      <a href="/model-results" class="btn btn-outline-primary">Model Results</a>
+      <a href="/compare-assets" class="btn btn-outline-primary">Compare Assets</a>
+    </div>
+  </div>
+</main>
+
+{% include 'abstracts/footer.html' %}

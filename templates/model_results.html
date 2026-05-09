@@ -60,41 +60,6 @@
     </div>
   </div>
 
-  <!-- Results table -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <h5>Saved Model Comparison Table</h5>
-
-      <table class="table table-bordered table-striped mt-3">
-        <thead class="table-dark">
-          <tr>
-            <th>Run Time</th>
-            <th>Asset</th>
-            <th>Source</th>
-            <th>Linear Regression RMSE</th>
-            <th>LSTM RMSE</th>
-            <th>Best Model</th>
-            <th>LSTM Improvement %</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {% for result in model_results %}
-          <tr>
-            <td>{{ result.Run_Time if result.Run_Time is defined else "Original Result" }}</td>
-            <td><strong>{{ result.Asset }}</strong></td>
-            <td>{{ result.Source if result.Source is defined else "static_csv" }}</td>
-            <td>{{ "%.6f"|format(result.Linear_Regression_RMSE) }}</td>
-            <td>{{ "%.6f"|format(result.LSTM_RMSE) }}</td>
-            <td>{{ result.Best_Model }}</td>
-            <td>{{ "%.2f"|format(result["LSTM_Improvement_%"]) }}%</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
   <div class="mt-4">
     <a href="/dashboard" class="btn btn-outline-primary">Back to Dashboard</a>
     <a href="/correlations" class="btn btn-outline-primary">View Correlations</a>

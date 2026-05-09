@@ -1,0 +1,43 @@
+{% include 'abstracts/head.html' %}
+{% include 'abstracts/menu.html' %}
+
+<main class="container mt-5">
+  {% if asset %}
+    <h2>{{ asset.Symbol }} - {{ asset.Name }}</h2>
+
+    <div class="card mt-4">
+      <div class="card-body">
+        <h5 class="card-title">Asset Information</h5>
+
+        <ul class="list-group mb-3">
+          <li class="list-group-item"><strong>Symbol:</strong> {{ asset.Symbol }}</li>
+          <li class="list-group-item"><strong>Name:</strong> {{ asset.Name }}</li>
+          <li class="list-group-item"><strong>Type:</strong> {{ asset.Type }}</li>
+        </ul>
+
+        <p>{{ asset.Description }}</p>
+
+        <a href="/predictions/{{ asset.Symbol }}" class="btn btn-primary">View Predictions</a>
+        <a href="/live-market/{{ asset.Symbol }}" class="btn btn-success">View Live Market Data</a>
+        <a href="/model-results" class="btn btn-outline-dark">View Model Results</a>
+      </div>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-body">
+        <h5 class="card-title">Future Real-Time News Integration</h5>
+        <p>
+          This section is reserved for future integration with financial news APIs.
+          The goal is to support real-time market context and improve decision support
+          beyond historical price-based prediction.
+        </p>
+      </div>
+    </div>
+  {% else %}
+    <div class="alert alert-danger">
+      Asset "{{ symbol }}" was not found.
+    </div>
+  {% endif %}
+</main>
+
+{% include 'abstracts/footer.html' %}

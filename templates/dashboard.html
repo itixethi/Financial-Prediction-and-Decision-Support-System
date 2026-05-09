@@ -29,6 +29,7 @@
       </datalist>
     </div>
 
+    <input type="hidden" name="source" id="hiddenSource" value="{{ source }}">
     <input type="hidden" name="test_mode" id="hiddenTestMode" value="{{ test_mode }}">
     <input type="hidden" name="evaluation_start" id="hiddenEvaluationStart" value="{{ evaluation_start }}">
     <input type="hidden" name="evaluation_end" id="hiddenEvaluationEnd" value="{{ evaluation_end }}">
@@ -152,12 +153,24 @@
       <div class="card shadow-sm">
         <div class="card-body">
           <p>
-            Select a test period and run the research-mode pipeline for the selected stock or ETF.
+            Select a test period and run the research mode pipeline for the selected stock or ETF.
             The system will train Linear Regression and LSTM, then save the generated results.
           </p>
 
           <div class="row g-3 mb-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <label class="form-label">Data Source</label>
+                <select class="form-select" id="dataSourceSelect" name="source">
+                    <option value="kaggle" {% if source == "kaggle" %}selected{% endif %}>
+                        Historical Kaggle Dataset
+                    </option>
+                    <option value="live" {% if source == "live" %}selected{% endif %}>
+                        Recent 5-Year Live Data
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
               <label class="form-label">Test Period Mode</label>
               <select class="form-select" id="testModeSelect" name="test_mode">
                 <option value="original" {% if test_mode == "original" %}selected{% endif %}>Original Dissertation Window</option>
@@ -167,7 +180,7 @@
             </select>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label class="form-label">Evaluation Start</label>
               <input
                 type="date"
@@ -178,7 +191,7 @@
               />
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label class="form-label">Evaluation End</label>
               <input
                 type="date"
