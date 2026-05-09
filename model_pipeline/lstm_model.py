@@ -57,7 +57,7 @@ def run_lstm_model(
     X_test = test_df[feature_columns].values
     y_test = test_df["Return"].values
 
-    # MinMaxScaler follows the LSTM setup used in the dissertation work
+    # MinMaxScaler follows the LSTM setup used in the EDAdissertation work
     scaler = MinMaxScaler(feature_range=(-1, 1))
 
     # Fit only on training features to avoid data leakage
