@@ -1,7 +1,5 @@
 # Financial Prediction and Decision Support System
 
-# Financial Prediction and Decision Support System
-
 A web-based financial analytics and decision support system developed to compare machine-learning approaches for predicting stock and ETF returns. The application compares Linear Regression and Long Short-Term Memory (LSTM) models and presents their performance through an interactive financial analytics interface.
 
 ## Project Overview
