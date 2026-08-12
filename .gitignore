@@ -9,3 +9,7 @@ __pycache__/
 *.json
 .ipynb_checkpoints/
 EOF
+*.py[cod]
+# Original Kaggle historical dataset
+data/historical/
+data/raw/symbols_valid_meta.csv
