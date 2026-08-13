@@ -319,8 +319,8 @@ The `__init__.py` files identify directories such as `database` and `model_pipel
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/itixethi/financial-prediction-decision-support-system.git
-cd financial-prediction-decision-support-system
+git clone https://github.com/itixethi/financial-prediction-and-decision-support-system.git
+cd financial-prediction-and-decision-support-system
 ```
 
 ### 2. Create a virtual environment
